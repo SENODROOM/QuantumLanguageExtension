@@ -3,7 +3,7 @@
   "displayName": "Quantum Language",
   "description": "Syntax highlighting, multi-syntax coloring, auto-completion, and snippets for Quantum Language (.sa files)",
   "version": "1.1.0",
-  "publisher": "Muhammad Saad Amin",
+  "publisher": "MuhammadSaadAmin",
   "engines": {
     "vscode": "^1.60.0"
   },
