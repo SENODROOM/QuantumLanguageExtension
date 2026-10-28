@@ -87,10 +87,70 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+const defaultExcludeGlobs = ['**/compiler/src/**', '**/src/generated/**', '**/src/java/**'];
+
+// ** matches across folders, * within one folder name
+function globToRegExp(glob: string): RegExp {
+	let re = '';
+	for (let i = 0; i < glob.length; i++) {
+		const c = glob[i];
+		if (c === '*') {
+			if (glob[i + 1] === '*') {
+				i++;
+				if (glob[i + 1] === '/') {
+					i++;
+					re += '(?:.*/)?';
+				} else {
+					re += '.*';
+				}
+			} else {
+				re += '[^/]*';
+			}
+		} else if ('.+^${}()|[]\\'.indexOf(c) >= 0) {
+			re += '\\' + c;
+		} else {
+			re += c;
+		}
+	}
+	return new RegExp('^' + re + '$', 'i');
+}
+
+// A file the compiler cannot check on its own: it only compiles together with
+// other files (the compiler's own sources, the Java library classes)
+function isFragment(fsPath: string, text: string, globs: string[]): boolean {
+	const p = fsPath.split('\\').join('/');
+	if (globs.some(g => globToRegExp(g).test(p))) {
+		return true;
+	}
+	// a Java library class: starts with `package a.b;` (comments aside)
+	const head = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '').trimStart();
+	return /^package\s+[\w.]+\s*;/.test(head);
+}
+
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this implementation, we run the quantum compiler with --check flag
 	const text = textDocument.getText();
 	const filePath = new URL(textDocument.uri).pathname;
+
+	let enabled = true;
+	let excludeGlobs = defaultExcludeGlobs;
+	if (hasConfigurationCapability) {
+		try {
+			const cfg = await connection.workspace.getConfiguration({ section: 'quantum.linting' });
+			if (cfg && cfg.enabled === false) {
+				enabled = false;
+			}
+			if (cfg && Array.isArray(cfg.excludeGlobs)) {
+				excludeGlobs = cfg.excludeGlobs;
+			}
+		} catch (e) {
+			// keep the defaults
+		}
+	}
+	if (!enabled || isFragment(decodeURIComponent(filePath), text, excludeGlobs)) {
+		connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
+		return;
+	}
 	// Convert URI to local path if needed (OS dependent)
 	let localPath = filePath;
 	if (process.platform === 'win32') {
@@ -110,7 +170,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 
 	// We'll write the content to a temp file to check it
-	const tempPath = localPath + '.tmp';
+	// keep the .sa extension: the compiler picks its passes by it
+	const tempPath = localPath.replace(/\.sa$/i, '') + '.__check.sa';
 	fs.writeFileSync(tempPath, text);
 
 	const command = `"${quantumPath}" --check "${tempPath}"`;

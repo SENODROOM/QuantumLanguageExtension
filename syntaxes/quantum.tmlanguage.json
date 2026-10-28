@@ -3,6 +3,7 @@
   "name": "Quantum",
   "scopeName": "source.quantum",
   "patterns": [
+    { "include": "#preprocessor" },
     { "include": "#block_comments" },
     { "include": "#line_python" },
     { "include": "#line_cpp" },
@@ -11,6 +12,26 @@
     { "include": "#line_default" }
   ],
   "repository": {
+    "preprocessor": {
+      "comment": "#include / #define / ... are directives the compiler consumes, not comments",
+      "patterns": [
+        {
+          "name": "meta.preprocessor.quantum",
+          "match": "^\\s*(#\\s*(?:include_next|include|import|define|undef|ifdef|ifndef|elif|if|else|endif|pragma|error|warning|line))\\b(.*)$",
+          "captures": {
+            "1": { "name": "keyword.control.directive.quantum" },
+            "2": {
+              "patterns": [
+                { "name": "comment.line.double-slash.quantum", "match": "//.*$" },
+                { "name": "string.quoted.other.lt-gt.include.quantum", "match": "<[^>\\n]*>" },
+                { "name": "string.quoted.double.quantum", "match": "\"[^\"\\n]*\"" },
+                { "name": "entity.name.function.preprocessor.quantum", "match": "[A-Za-z_][A-Za-z0-9_]*" }
+              ]
+            }
+          }
+        }
+      ]
+    },
 
     "block_comments": {
       "patterns": [

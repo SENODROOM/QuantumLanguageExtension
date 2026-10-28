@@ -2,7 +2,7 @@
   "name": "quantum-language",
   "displayName": "Quantum Language",
   "description": "Syntax highlighting, multi-syntax coloring, auto-completion, and snippets for Quantum Language (.sa files)",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "MuhammadSaadAmin",
   "engines": {
     "vscode": "^1.60.0"
@@ -25,6 +25,17 @@
         "path": "./syntaxes/quantum.tmlanguage.json"
       }
     ],
+    "configurationDefaults": {
+      "[quantum]": {
+        "editor.tokenColorCustomizations": {
+          "textMateRules": [
+            { "scope": ["comment", "comment.line", "comment.block", "punctuation.definition.comment"], "settings": { "foreground": "#3FA34D", "fontStyle": "italic" } },
+            { "scope": ["meta.preprocessor.quantum", "keyword.control.directive.quantum"], "settings": { "foreground": "#2F80ED", "fontStyle": "" } },
+            { "scope": ["string.quoted.other.lt-gt.include.quantum", "entity.name.function.preprocessor.quantum"], "settings": { "foreground": "#56B6C2" } }
+          ]
+        }
+      }
+    },
     "snippets": [
       {
         "language": "quantum",
@@ -44,6 +55,12 @@
             "type": "boolean",
             "default": true,
             "description": "Enable Quantum code formatting"
+          },
+          "quantum.linting.excludeGlobs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": ["**/compiler/src/**", "**/src/generated/**", "**/src/java/**"],
+            "description": "Files matching these globs are not checked on their own: they are fragments that only compile together with other files (the compiler's own sources, the Java library classes)."
           },
           "quantum.linting.enabled": {
             "type": "boolean",
