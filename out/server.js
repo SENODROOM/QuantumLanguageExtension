@@ -88,10 +88,16 @@ function globToRegExp(glob) {
     return new RegExp('^' + re + '$', 'i');
 }
 // A file the compiler cannot check on its own: it only compiles together with
-// other files (the compiler's own sources, the Java library classes)
+// other files (the compiler's own sources, the Java library classes) or needs the
+// native backend (Windows API code)
 function isFragment(fsPath, text, globs) {
     const p = fsPath.split('\\').join('/');
     if (globs.some(g => globToRegExp(g).test(p))) {
+        return true;
+    }
+    // native-only: `// quantum: cpp` code that uses the Windows API or zlib, whose
+    // headers only the native backend has (the VM checker cannot parse it)
+    if (/^\uFEFF?\/\/ quantum: cpp/.test(text) && /^\s*#\s*include\s*<(windows|winhttp|shellapi|zlib)\.h>/m.test(text)) {
         return true;
     }
     // a Java library class: starts with `package a.b;` (comments aside)

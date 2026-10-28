@@ -2,7 +2,7 @@
   "name": "quantum-language",
   "displayName": "Quantum Language",
   "description": "Syntax highlighting, multi-syntax coloring, auto-completion, and snippets for Quantum Language (.sa files)",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publisher": "MuhammadSaadAmin",
   "engines": {
     "vscode": "^1.60.0"
@@ -60,7 +60,7 @@
             "type": "array",
             "items": { "type": "string" },
             "default": ["**/compiler/src/**", "**/src/generated/**", "**/src/java/**"],
-            "description": "Files matching these globs are not checked on their own: they are fragments that only compile together with other files (the compiler's own sources, the Java library classes)."
+            "description": "Files matching these globs are not checked on their own: they are fragments that only compile together with other files (the compiler's own sources, the Java library classes). Native-only files that include <windows.h>, <winhttp.h>, <shellapi.h> or <zlib.h> are always skipped."
           },
           "quantum.linting.enabled": {
             "type": "boolean",
